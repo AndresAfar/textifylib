@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TextifyLib — Demo</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fff;
+        --fg: #1f2328;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --accent: #4f46e5;
+        --code: #f6f8fa;
+        --active: #eef2ff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --fg: #e6edf3;
+          --muted: #8b949e;
+          --border: #30363d;
+          --code: #161b22;
+          --active: #1c2333;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.5;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 1rem 0;
+      }
+      button,
+      select {
+        padding: 0.4rem 0.7rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+        color: var(--fg);
+        cursor: pointer;
+        font: inherit;
+      }
+      button:hover,
+      select:hover {
+        border-color: var(--accent);
+      }
+      button.is-active {
+        background: var(--active);
+        border-color: var(--accent);
+      }
+      .divider {
+        width: 1px;
+        align-self: stretch;
+        background: var(--border);
+        margin: 0 0.2rem;
+      }
+      #editor {
+        min-height: 160px;
+        padding: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        outline: none;
+      }
+      #editor:focus {
+        border-color: var(--accent);
+      }
+      #editor:empty::before {
+        content: attr(data-placeholder);
+        color: var(--muted);
+      }
+      section {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1.5rem;
+      }
+      pre {
+        margin: 0.25rem 0 0;
+        padding: 0.75rem;
+        background: var(--code);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-size: 0.85rem;
+      }
+      h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>TextifyLib</h1>
+      <p class="muted">
+        Headless rich text engine — Milestone 7 (paste + sanitization). Use the toolbar or shortcuts
+        (Mod+B, Mod+I, Mod+U, Mod+Z, Mod+Shift+Z), paste plain text or HTML, then inspect the
+        outputs. The Highlight button comes from a custom extension.
+      </p>
+
+      <div class="toolbar" id="format-toolbar">
+        <button type="button" data-mark="bold" title="Bold"><strong>B</strong></button>
+        <button type="button" data-mark="italic" title="Italic"><em>I</em></button>
+        <button type="button" data-mark="underline" title="Underline"><u>U</u></button>
+        <button type="button" data-mark="strike" title="Strikethrough"><s>S</s></button>
+
+        <span class="divider"></span>
+
+        <button type="button" data-block="paragraph">Paragraph</button>
+        <button type="button" data-heading="1">H1</button>
+        <button type="button" data-heading="2">H2</button>
+        <button type="button" data-heading="3">H3</button>
+
+        <span class="divider"></span>
+
+        <button type="button" data-list="bulletList">• List</button>
+        <button type="button" data-list="orderedList">1. List</button>
+
+        <span class="divider"></span>
+
+        <button type="button" id="link">Link</button>
+        <button type="button" id="unlink">Unlink</button>
+        <button type="button" id="highlight" title="Custom extension mark">Highlight</button>
+
+        <span class="divider"></span>
+
+        <button type="button" id="undo">Undo</button>
+        <button type="button" id="redo">Redo</button>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" id="sample-basic">Sample: basic</button>
+        <button type="button" id="sample-bold">Sample: bold</button>
+        <button type="button" id="sample-multi">Sample: multi-block</button>
+        <button type="button" id="select-all">Select all</button>
+        <button type="button" id="clear">Clear</button>
+      </div>
+
+      <div id="editor"></div>
+
+      <p class="muted" id="selection-status"></p>
+
+      <section>
+        <div>
+          <h2>HTML</h2>
+          <pre id="output-html"></pre>
+        </div>
+        <div>
+          <h2>JSON</h2>
+          <pre id="output-json"></pre>
+        </div>
+        <div>
+          <h2>Plain text</h2>
+          <pre id="output-text"></pre>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

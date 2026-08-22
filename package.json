@@ -1,0 +1,60 @@
+{
+  "name": "textifylib",
+  "version": "0.1.0",
+  "description": "Headless, lightweight, framework-agnostic rich text editor engine.",
+  "type": "module",
+  "license": "MIT",
+  "author": "AndresAfar",
+  "sideEffects": false,
+  "main": "./dist/textifylib.cjs",
+  "module": "./dist/textifylib.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/textifylib.js",
+      "require": "./dist/textifylib.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "dev": "vite demo",
+    "build": "tsc --noEmit && vite build && tsc -p tsconfig.build.json",
+    "preview": "vite preview demo",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "bundle:size": "vite build && node scripts/bundle-size.mjs",
+    "prepublishOnly": "npm run build && npm run test && npm run lint"
+  },
+  "keywords": [
+    "rich-text",
+    "editor",
+    "headless",
+    "text-editor",
+    "wysiwyg",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.2.0",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.9.0",
+    "jsdom": "^29.1.1",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
+  }
+}
