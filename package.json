@@ -6,6 +6,7 @@
   "license": "MIT",
   "author": "AndresAfar",
   "sideEffects": false,
+  "repository": "https://github.com/AndresAfar/textifylib",
   "main": "./dist/textifylib.cjs",
   "module": "./dist/textifylib.js",
   "types": "./dist/index.d.ts",

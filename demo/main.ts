@@ -18,7 +18,7 @@ const highlightExtension: Extension = {
 const editor = createEditor({
   element: editorElement,
   content: '<p>Hello <strong>TextifyLib</strong></p>',
-  placeholder: 'Start typing…',
+  placeholder: 'Start writing…',
   extensions: [highlightExtension],
 });
 
@@ -26,17 +26,25 @@ const outputHTML = document.querySelector<HTMLElement>('#output-html')!;
 const outputJSON = document.querySelector<HTMLElement>('#output-json')!;
 const outputText = document.querySelector<HTMLElement>('#output-text')!;
 const selectionStatus = document.querySelector<HTMLElement>('#selection-status')!;
+const wordCount = document.querySelector<HTMLElement>('#word-count')!;
 
 function updateOutputs(): void {
   outputHTML.textContent = editor.getHTML();
   outputJSON.textContent = JSON.stringify(editor.getJSON(), null, 2);
   outputText.textContent = editor.getText();
+  updateWordCount();
+}
+
+function updateWordCount(): void {
+  const text = editor.getText();
+  const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+  wordCount.textContent = `${words} words · ${text.length} chars`;
 }
 
 function updateSelectionStatus(): void {
   const selection = editor.getSelection();
   selectionStatus.textContent = selection
-    ? `Selection: { from: ${selection.from}, to: ${selection.to}, empty: ${selection.empty} }`
+    ? `Selection: { from: ${selection.from}, to: ${selection.to}${selection.empty ? ', caret' : ''} }`
     : 'Selection: none';
 }
 
@@ -116,9 +124,53 @@ document.querySelector<HTMLElement>('#redo')!.addEventListener('click', () => {
   editor.commands.redo();
 });
 
+// Output tabs
+let activeTab = 'html';
+const panels: Record<string, HTMLElement> = {
+  html: outputHTML,
+  json: outputJSON,
+  text: outputText,
+};
+
+document.querySelectorAll<HTMLElement>('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    activeTab = tab.dataset.tab ?? 'html';
+    document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('is-active', t === tab));
+    document.querySelectorAll('.panel').forEach((p) => {
+      p.classList.toggle('is-active', p.getAttribute('data-panel') === activeTab);
+    });
+  });
+});
+
+// Copy button
+const copyButton = document.querySelector<HTMLElement>('#copy')!;
+const copyLabel = document.querySelector<HTMLElement>('#copy-label')!;
+const copyIcon = copyButton.querySelector<HTMLElement>('.ic')!;
+
+copyButton.addEventListener('click', () => {
+  const content = panels[activeTab]!.textContent ?? '';
+  navigator.clipboard.writeText(content).then(
+    () => {
+      copyLabel.textContent = 'Copied';
+      copyIcon.innerHTML = '<use href="#i-check" />';
+      window.setTimeout(() => {
+        copyLabel.textContent = 'Copy';
+        copyIcon.innerHTML = '<use href="#i-copy" />';
+      }, 1200);
+    },
+    () => {
+      copyLabel.textContent = 'Failed';
+    },
+  );
+});
+
 const samples: Record<string, string> = {
   'sample-basic': '<p>This is a plain paragraph.</p>',
-  'sample-bold': '<p>Hello <strong>world</strong>, <em>this is TextifyLib</em>.</p>',
+  'sample-rich':
+    '<h1>Welcome to TextifyLib</h1>' +
+    '<p>A <strong>headless</strong> rich text engine. Select any text and use the toolbar, or try the <a href="https://example.com">keyboard shortcuts</a>.</p>' +
+    '<h2>What you can do</h2>' +
+    '<ul><li><em>Italic</em>, <u>underline</u> and <s>strikethrough</s></li><li>Headings, bullet and ordered lists</li><li>Undo / redo and custom extensions</li></ul>',
   'sample-multi': '<p>First paragraph.</p><p>Second <strong>bold</strong> paragraph.</p>',
 };
 

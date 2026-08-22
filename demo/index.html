@@ -7,177 +7,567 @@
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #fff;
-        --fg: #1f2328;
-        --muted: #6b7280;
-        --border: #e5e7eb;
-        --accent: #4f46e5;
-        --code: #f6f8fa;
-        --active: #eef2ff;
+        --bg: #f4f5f7;
+        --surface: #ffffff;
+        --surface-2: #f4f6f8;
+        --fg: #1c2024;
+        --muted: #687076;
+        --border: #e4e7ec;
+        --border-strong: #d4d9e0;
+        --accent: #6366f1;
+        --accent-2: #8b5cf6;
+        --accent-soft: #eef0ff;
+        --ring: rgba(99, 102, 241, 0.35);
+        --code: #0f172a;
+        --code-fg: #e2e8f0;
+        --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 6px 24px rgba(16, 24, 40, 0.07);
+        --mark: #fef08a;
       }
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #0d1117;
-          --fg: #e6edf3;
-          --muted: #8b949e;
-          --border: #30363d;
-          --code: #161b22;
-          --active: #1c2333;
+          --bg: #0b0d12;
+          --surface: #14171d;
+          --surface-2: #1a1e26;
+          --fg: #e6ebf2;
+          --muted: #8b94a3;
+          --border: #262b36;
+          --border-strong: #333a47;
+          --accent-soft: #232642;
+          --ring: rgba(139, 92, 246, 0.4);
+          --code: #0a0d13;
+          --code-fg: #d7dde6;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 24px rgba(0, 0, 0, 0.45);
+          --mark: #6b5d1a;
         }
       }
       * {
         box-sizing: border-box;
       }
+      html,
       body {
         margin: 0;
-        font-family: system-ui, sans-serif;
-        background: var(--bg);
+        min-height: 100%;
+      }
+      body {
+        font-family:
+          'Inter',
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background:
+          radial-gradient(1100px 480px at 18% -8%, var(--accent-soft), transparent 60%), var(--bg);
         color: var(--fg);
         line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
       }
-      main {
-        max-width: 720px;
+      .page {
+        max-width: 780px;
         margin: 0 auto;
-        padding: 2rem 1.5rem 4rem;
+        padding: 2.25rem 1.25rem 4rem;
       }
-      h1 {
-        font-size: 1.5rem;
+
+      .masthead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
       }
-      .muted {
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.7rem;
+        font-weight: 800;
+        font-size: 1.15rem;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 4px 14px var(--ring);
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 1.3rem;
+        letter-spacing: -0.02em;
+      }
+      .brand .tagline {
+        margin: 0;
+        font-size: 0.82rem;
         color: var(--muted);
       }
+      .badge {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent);
+        background: var(--accent-soft);
+        border: 1px solid var(--border);
+        padding: 0.3rem 0.6rem;
+        border-radius: 999px;
+      }
+
+      .editor-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
       .toolbar {
+        position: sticky;
+        top: 0.75rem;
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 0.4rem;
-        margin: 1rem 0;
+        padding: 0.6rem 0.7rem;
+        background: color-mix(in srgb, var(--surface) 88%, transparent);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
       }
-      button,
-      select {
-        padding: 0.4rem 0.7rem;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        background: var(--bg);
-        color: var(--fg);
-        cursor: pointer;
-        font: inherit;
-      }
-      button:hover,
-      select:hover {
-        border-color: var(--accent);
-      }
-      button.is-active {
-        background: var(--active);
-        border-color: var(--accent);
+      .group {
+        display: flex;
+        align-items: center;
+        gap: 0.18rem;
       }
       .divider {
         width: 1px;
-        align-self: stretch;
+        height: 1.5rem;
         background: var(--border);
-        margin: 0 0.2rem;
+        margin: 0 0.35rem;
       }
-      #editor {
-        min-height: 160px;
-        padding: 1rem;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        outline: none;
+      .toolbar button {
+        display: grid;
+        place-items: center;
+        min-width: 2.1rem;
+        height: 2.1rem;
+        padding: 0 0.5rem;
+        border: 1px solid transparent;
+        border-radius: 0.5rem;
+        background: transparent;
+        color: var(--fg);
+        cursor: pointer;
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        transition:
+          background 0.12s ease,
+          border-color 0.12s ease,
+          color 0.12s ease;
       }
-      #editor:focus {
+      .toolbar button:hover {
+        background: var(--surface-2);
+        border-color: var(--border);
+      }
+      .toolbar button.is-active {
+        background: var(--accent-soft);
         border-color: var(--accent);
+        color: var(--accent);
+      }
+      .toolbar button:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--ring);
+      }
+      .toolbar .ic {
+        width: 1.1rem;
+        height: 1.1rem;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+      }
+      .toolbar .text-btn {
+        font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      }
+
+      #editor {
+        min-height: 340px;
+        padding: 2rem 2.25rem 2.5rem;
+        outline: none;
+        caret-color: var(--accent);
+        font-family: 'Charter', Georgia, 'Times New Roman', serif;
+        font-size: 1.06rem;
+        line-height: 1.75;
+        color: var(--fg);
       }
       #editor:empty::before {
         content: attr(data-placeholder);
         color: var(--muted);
+        pointer-events: none;
       }
-      section {
-        display: grid;
+      #editor p {
+        margin: 0 0 0.85rem;
+      }
+      #editor h1,
+      #editor h2,
+      #editor h3 {
+        margin: 1.6rem 0 0.6rem;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+      }
+      #editor h1 {
+        font-size: 2rem;
+      }
+      #editor h2 {
+        font-size: 1.55rem;
+      }
+      #editor h3 {
+        font-size: 1.25rem;
+      }
+      #editor ul,
+      #editor ol {
+        margin: 0 0 0.85rem;
+        padding-left: 1.5rem;
+      }
+      #editor li {
+        margin: 0.25rem 0;
+      }
+      #editor a {
+        color: var(--accent);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      #editor blockquote {
+        margin: 1rem 0;
+        padding: 0.25rem 1rem;
+        border-left: 3px solid var(--accent);
+        color: var(--muted);
+        font-style: italic;
+      }
+      #editor mark {
+        background: var(--mark);
+        padding: 0 0.15rem;
+        border-radius: 0.2rem;
+      }
+      #editor u {
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      #editor s {
+        opacity: 0.7;
+      }
+      #editor code {
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+        background: var(--surface-2);
+        padding: 0.1rem 0.35rem;
+        border-radius: 0.3rem;
+      }
+
+      .statusbar {
+        display: flex;
+        align-items: center;
         gap: 1rem;
-        margin-top: 1.5rem;
+        padding: 0.5rem 0.9rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.78rem;
+        color: var(--muted);
       }
-      pre {
-        margin: 0.25rem 0 0;
-        padding: 0.75rem;
-        background: var(--code);
+      .statusbar .spacer {
+        flex: 1;
+      }
+      .statusbar .pill {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .outputs {
+        margin-top: 1.25rem;
+        background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .tabs {
+        display: flex;
+        align-items: center;
+        gap: 0.15rem;
+        padding: 0.4rem 0.5rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .tabs .tab {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.4rem 0.75rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+      .tabs .tab:hover {
+        color: var(--fg);
+        background: var(--surface-2);
+      }
+      .tabs .tab.is-active {
+        color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .tabs .copy-btn {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--muted);
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.65rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+      }
+      .tabs .copy-btn:hover {
+        border-color: var(--border-strong);
+        color: var(--fg);
+      }
+      .tabs .copy-btn .ic {
+        width: 0.9rem;
+        height: 0.9rem;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+      .panel {
+        display: none;
+        padding: 0.9rem 1rem;
+      }
+      .panel.is-active {
+        display: block;
+      }
+      .panel pre {
+        margin: 0;
+        padding: 0.9rem 1rem;
+        background: var(--code);
+        color: var(--code-fg);
+        border-radius: 0.6rem;
         overflow-x: auto;
         white-space: pre-wrap;
         word-break: break-word;
-        font-size: 0.85rem;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 0.8rem;
+        line-height: 1.55;
       }
-      h2 {
-        margin: 0;
-        font-size: 1rem;
+
+      .samples {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+      }
+      .samples .label {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-weight: 600;
+        margin-right: 0.25rem;
+      }
+      .samples button {
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--fg);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        padding: 0.45rem 0.8rem;
+        border-radius: 0.6rem;
+        cursor: pointer;
+        transition:
+          border-color 0.12s ease,
+          transform 0.05s ease;
+      }
+      .samples button:hover {
+        border-color: var(--accent);
+      }
+      .samples button:active {
+        transform: translateY(1px);
       }
     </style>
   </head>
   <body>
-    <main>
-      <h1>TextifyLib</h1>
-      <p class="muted">
-        Headless rich text engine — Milestone 7 (paste + sanitization). Use the toolbar or shortcuts
-        (Mod+B, Mod+I, Mod+U, Mod+Z, Mod+Shift+Z), paste plain text or HTML, then inspect the
-        outputs. The Highlight button comes from a custom extension.
-      </p>
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+      <symbol id="i-bold" viewBox="0 0 24 24">
+        <path d="M6 4h8a4 4 0 0 1 0 8H6z" />
+        <path d="M6 12h9a4 4 0 0 1 0 8H6z" />
+      </symbol>
+      <symbol id="i-italic" viewBox="0 0 24 24">
+        <line x1="19" y1="4" x2="10" y2="4" />
+        <line x1="14" y1="20" x2="5" y2="20" />
+        <line x1="15" y1="4" x2="9" y2="20" />
+      </symbol>
+      <symbol id="i-underline" viewBox="0 0 24 24">
+        <path d="M6 4v6a6 6 0 0 0 12 0V4" />
+        <line x1="4" y1="20" x2="20" y2="20" />
+      </symbol>
+      <symbol id="i-strike" viewBox="0 0 24 24">
+        <path d="M16 4H9a3 3 0 0 0-2.83 4" />
+        <path d="M14 12a4 4 0 0 1 0 8H6" />
+        <line x1="4" y1="12" x2="20" y2="12" />
+      </symbol>
+      <symbol id="i-pilcrow" viewBox="0 0 24 24">
+        <path d="M13 4v16" />
+        <path d="M17 4v16" />
+        <path d="M19 4H9.5a4.5 4.5 0 0 0 0 9H13" />
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 24 24">
+        <line x1="8" y1="6" x2="21" y2="6" />
+        <line x1="8" y1="12" x2="21" y2="12" />
+        <line x1="8" y1="18" x2="21" y2="18" />
+        <line x1="3" y1="6" x2="3.01" y2="6" />
+        <line x1="3" y1="12" x2="3.01" y2="12" />
+        <line x1="3" y1="18" x2="3.01" y2="18" />
+      </symbol>
+      <symbol id="i-list-ordered" viewBox="0 0 24 24">
+        <line x1="10" y1="6" x2="21" y2="6" />
+        <line x1="10" y1="12" x2="21" y2="12" />
+        <line x1="10" y1="18" x2="21" y2="18" />
+        <path d="M4 6h1v4" />
+        <path d="M4 10h2" />
+        <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
+      </symbol>
+      <symbol id="i-link" viewBox="0 0 24 24">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </symbol>
+      <symbol id="i-unlink" viewBox="0 0 24 24">
+        <path d="m18.84 12.25 1.72-1.71a5 5 0 0 0-.12-7.07 5 5 0 0 0-6.95 0l-1.72 1.71" />
+        <path d="m5.17 11.75-1.71 1.71a5 5 0 0 0 .12 7.07 5 5 0 0 0 6.95 0l1.71-1.71" />
+        <line x1="8" y1="2" x2="8" y2="5" />
+        <line x1="2" y1="8" x2="5" y2="8" />
+        <line x1="16" y1="19" x2="16" y2="22" />
+        <line x1="19" y1="16" x2="22" y2="16" />
+      </symbol>
+      <symbol id="i-highlighter" viewBox="0 0 24 24">
+        <path d="m9 11-6 6v3h9l3-3" />
+        <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+      </symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24">
+        <path d="M3 7v6h6" />
+        <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+      </symbol>
+      <symbol id="i-redo" viewBox="0 0 24 24">
+        <path d="M21 7v6h-6" />
+        <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="8" y="8" width="14" height="14" rx="2" />
+        <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+      </symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+    </svg>
 
-      <div class="toolbar" id="format-toolbar">
-        <button type="button" data-mark="bold" title="Bold"><strong>B</strong></button>
-        <button type="button" data-mark="italic" title="Italic"><em>I</em></button>
-        <button type="button" data-mark="underline" title="Underline"><u>U</u></button>
-        <button type="button" data-mark="strike" title="Strikethrough"><s>S</s></button>
+    <div class="page">
+      <header class="masthead">
+        <div class="brand">
+          <span class="logo">T</span>
+          <div>
+            <h1>TextifyLib</h1>
+            <p class="tagline">Headless rich text editor</p>
+          </div>
+        </div>
+        <span class="badge">Milestone 8</span>
+      </header>
 
-        <span class="divider"></span>
+      <div class="editor-card">
+        <div class="toolbar" id="format-toolbar" role="toolbar" aria-label="Formatting">
+          <div class="group">
+            <button type="button" data-mark="bold" title="Bold (Mod+B)">
+              <svg class="ic"><use href="#i-bold" /></svg>
+            </button>
+            <button type="button" data-mark="italic" title="Italic (Mod+I)">
+              <svg class="ic"><use href="#i-italic" /></svg>
+            </button>
+            <button type="button" data-mark="underline" title="Underline (Mod+U)">
+              <svg class="ic"><use href="#i-underline" /></svg>
+            </button>
+            <button type="button" data-mark="strike" title="Strikethrough">
+              <svg class="ic"><use href="#i-strike" /></svg>
+            </button>
+          </div>
+          <span class="divider"></span>
+          <div class="group">
+            <button type="button" data-block="paragraph" title="Paragraph">
+              <svg class="ic"><use href="#i-pilcrow" /></svg>
+            </button>
+            <button type="button" class="text-btn" data-heading="1" title="Heading 1">H1</button>
+            <button type="button" class="text-btn" data-heading="2" title="Heading 2">H2</button>
+            <button type="button" class="text-btn" data-heading="3" title="Heading 3">H3</button>
+          </div>
+          <span class="divider"></span>
+          <div class="group">
+            <button type="button" data-list="bulletList" title="Bullet list">
+              <svg class="ic"><use href="#i-list" /></svg>
+            </button>
+            <button type="button" data-list="orderedList" title="Ordered list">
+              <svg class="ic"><use href="#i-list-ordered" /></svg>
+            </button>
+          </div>
+          <span class="divider"></span>
+          <div class="group">
+            <button type="button" id="link" title="Link">
+              <svg class="ic"><use href="#i-link" /></svg>
+            </button>
+            <button type="button" id="unlink" title="Unlink">
+              <svg class="ic"><use href="#i-unlink" /></svg>
+            </button>
+            <button type="button" id="highlight" title="Highlight (custom extension)">
+              <svg class="ic"><use href="#i-highlighter" /></svg>
+            </button>
+          </div>
+          <span class="divider"></span>
+          <div class="group">
+            <button type="button" id="undo" title="Undo (Mod+Z)">
+              <svg class="ic"><use href="#i-undo" /></svg>
+            </button>
+            <button type="button" id="redo" title="Redo (Mod+Shift+Z)">
+              <svg class="ic"><use href="#i-redo" /></svg>
+            </button>
+          </div>
+        </div>
 
-        <button type="button" data-block="paragraph">Paragraph</button>
-        <button type="button" data-heading="1">H1</button>
-        <button type="button" data-heading="2">H2</button>
-        <button type="button" data-heading="3">H3</button>
+        <div id="editor"></div>
 
-        <span class="divider"></span>
-
-        <button type="button" data-list="bulletList">• List</button>
-        <button type="button" data-list="orderedList">1. List</button>
-
-        <span class="divider"></span>
-
-        <button type="button" id="link">Link</button>
-        <button type="button" id="unlink">Unlink</button>
-        <button type="button" id="highlight" title="Custom extension mark">Highlight</button>
-
-        <span class="divider"></span>
-
-        <button type="button" id="undo">Undo</button>
-        <button type="button" id="redo">Redo</button>
+        <div class="statusbar">
+          <span id="selection-status">Selection: none</span>
+          <span class="spacer"></span>
+          <span class="pill" id="word-count">0 words · 0 chars</span>
+        </div>
       </div>
 
-      <div class="toolbar">
-        <button type="button" id="sample-basic">Sample: basic</button>
-        <button type="button" id="sample-bold">Sample: bold</button>
-        <button type="button" id="sample-multi">Sample: multi-block</button>
+      <div class="outputs">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" data-tab="html" role="tab">HTML</button>
+          <button class="tab" data-tab="json" role="tab">JSON</button>
+          <button class="tab" data-tab="text" role="tab">Text</button>
+          <button class="copy-btn" id="copy" title="Copy output">
+            <svg class="ic"><use href="#i-copy" /></svg><span id="copy-label">Copy</span>
+          </button>
+        </div>
+        <div class="panel is-active" data-panel="html"><pre id="output-html"></pre></div>
+        <div class="panel" data-panel="json"><pre id="output-json"></pre></div>
+        <div class="panel" data-panel="text"><pre id="output-text"></pre></div>
+      </div>
+
+      <footer class="samples">
+        <span class="label">Samples</span>
+        <button type="button" id="sample-basic">Basic</button>
+        <button type="button" id="sample-rich">Rich</button>
+        <button type="button" id="sample-multi">Multi-block</button>
         <button type="button" id="select-all">Select all</button>
         <button type="button" id="clear">Clear</button>
-      </div>
-
-      <div id="editor"></div>
-
-      <p class="muted" id="selection-status"></p>
-
-      <section>
-        <div>
-          <h2>HTML</h2>
-          <pre id="output-html"></pre>
-        </div>
-        <div>
-          <h2>JSON</h2>
-          <pre id="output-json"></pre>
-        </div>
-        <div>
-          <h2>Plain text</h2>
-          <pre id="output-text"></pre>
-        </div>
-      </section>
-    </main>
+      </footer>
+    </div>
 
     <script type="module" src="/main.ts"></script>
   </body>
