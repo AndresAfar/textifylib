@@ -2,7 +2,20 @@
 
 All notable changes to TextifyLib will be documented in this file.
 
-## [0.1.0] - 2026-08-28
+## [0.2.0] - 2026-08-28
+
+### Added
+
+- Font family support: `fontFamily` mark, `fontFamily`/`unsetFontFamily` commands,
+  and a curated `FONT_FAMILIES` catalog (Ubuntu Mono, Times New Roman,
+  Inconsolata, ...) with a font picker in the demo.
+- Stored marks: toggling a mark (`bold`, `italic`, `link`, `fontFamily`, ...) at
+  a collapsed caret persists it so subsequent typing inherits the mark.
+- Line breaks: `Enter` splits the current block (new paragraph) and `Shift+Enter`
+  inserts a `hardBreak` (`<br>`) within the block, both driven through the model
+  so the caret stays on the new line.
+
+## [0.1.0] - 2026-08-22
 
 ### Added
 
@@ -43,11 +56,3 @@ All notable changes to TextifyLib will be documented in this file.
 - `ARCHITECTURE.md` documenting the design decisions; npm package metadata.
 - Unit tests (Vitest + jsdom) for the core, serialization and commands.
 - Minimal vanilla demo with a formatting toolbar.
-- Font family support: `fontFamily` mark, `fontFamily`/`unsetFontFamily` commands,
-  and a curated `FONT_FAMILIES` catalog (Ubuntu Mono, Times New Roman,
-  Inconsolata, ...) with a font picker in the demo.
-- Stored marks: toggling a mark (`bold`, `italic`, `link`, `fontFamily`, ...) at
-  a collapsed caret persists it so subsequent typing inherits the mark.
-- Line breaks: `Enter` splits the current block (new paragraph) and `Shift+Enter`
-  inserts a `hardBreak` (`<br>`) within the block, both driven through the model
-  so the caret stays on the new line.
