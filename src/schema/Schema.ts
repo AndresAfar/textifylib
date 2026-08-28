@@ -93,6 +93,18 @@ export class Schema {
     return null;
   }
 
+  /** Find the inline (leaf) node spec that matches the given DOM element. */
+  inlineNodeForElement(element: Element): NodeSpec | null {
+    for (const spec of this.nodes.values()) {
+      if (spec.group !== 'inline') continue;
+      if (spec.getAttrs) {
+        const attrs = spec.getAttrs(element);
+        if (attrs !== false) return spec;
+      }
+    }
+    return null;
+  }
+
   /** Find the mark spec that matches the given DOM element, if any. */
   markForElement(element: Element): MarkSpec | null {
     const tag = element.tagName.toLowerCase();

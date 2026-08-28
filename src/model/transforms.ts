@@ -34,6 +34,18 @@ export function removeMark(doc: EditorNode, from: number, to: number, type: stri
   return applyToRange(doc, from, to, (marks) => marks.filter((m) => m.type !== type));
 }
 
+/** Add any of `added` not already present over [from, to], preserving existing marks. */
+export function addMarks(doc: EditorNode, from: number, to: number, added: Mark[]): EditorNode {
+  if (from === to || added.length === 0) return doc;
+  return applyToRange(doc, from, to, (marks) => {
+    let result = marks;
+    for (const mark of added) {
+      if (!result.some((m) => marksEqual(m, mark))) result = [...result, mark];
+    }
+    return result;
+  });
+}
+
 /** Change the type/attrs of every block covered by [from, to]. */
 export function setBlockType(
   doc: EditorNode,
@@ -277,6 +289,40 @@ interface BlockLocation {
   contentOffset: number;
 }
 
+/**
+ * Split the text block containing `pos` at `pos`, returning the new document
+ * and the flat position at the start of the newly created block.
+ *
+ * Used to implement the Enter key: content after the caret moves into a new
+ * block of the same type. Lists are not split (see `splitListItem` for future
+ * list support).
+ */
+export function splitBlockAt(
+  doc: EditorNode,
+  pos: number,
+): { doc: EditorNode; pos: number } | null {
+  const loc = locateBlock(doc, pos);
+  if (!loc) return null;
+  if (loc.node.type === 'bulletList' || loc.node.type === 'orderedList') return null;
+
+  const { prefix, suffix } = splitInlineContent(loc.node.content ?? [], loc.contentOffset);
+  const prefixNode = withContent(loc.node, prefix);
+  const suffixNode = withContent(loc.node, suffix);
+
+  const blocks = doc.content ?? [];
+  const content = [
+    ...blocks.slice(0, loc.index),
+    prefixNode,
+    suffixNode,
+    ...blocks.slice(loc.index + 1),
+  ];
+
+  const atStart = loc.contentOffset === 0;
+  const newPos = atStart ? loc.blockFrom + 1 : loc.blockFrom + nodeSize(prefixNode) + 1;
+
+  return { doc: { ...doc, content }, pos: newPos };
+}
+
 function locateBlock(doc: EditorNode, pos: number): BlockLocation | null {
   let blockPos = 0;
   const blocks = doc.content ?? [];
@@ -339,7 +385,7 @@ function splitInlineContent(
   let pos = 0;
 
   for (const node of inline) {
-    const length = (node.text ?? '').length;
+    const length = nodeSize(node);
     const nodeFrom = pos;
     const nodeTo = pos + length;
 
@@ -347,13 +393,16 @@ function splitInlineContent(
       suffix.push(node);
     } else if (offset >= nodeTo) {
       prefix.push(node);
-    } else {
+    } else if (node.type === 'text') {
       const local = offset - nodeFrom;
       const value = node.text ?? '';
       const before = value.slice(0, local);
       const after = value.slice(local);
       if (before.length > 0) prefix.push(text(before, node.marks ?? []));
       if (after.length > 0) suffix.push(text(after, node.marks ?? []));
+    } else {
+      // Leaf inline nodes (e.g. hardBreak) cannot be split; keep them whole.
+      suffix.push(node);
     }
     pos += length;
   }
@@ -374,13 +423,13 @@ function replaceInlineInContent(
   let inserted = false;
 
   for (const node of inline) {
-    const length = (node.text ?? '').length;
+    const length = nodeSize(node);
     const nodeFrom = pos;
     const nodeTo = pos + length;
 
     if (nodeTo <= from || nodeFrom >= to) {
       result.push(node);
-    } else {
+    } else if (node.type === 'text') {
       const localFrom = Math.max(0, from - nodeFrom);
       const localTo = Math.min(length, to - nodeFrom);
       const value = node.text ?? '';
@@ -392,6 +441,12 @@ function replaceInlineInContent(
         inserted = true;
       }
       if (after.length > 0) result.push(text(after, node.marks ?? []));
+    } else {
+      // Leaf inline node covered by the range: drop it, insert once.
+      if (!inserted) {
+        result.push(...replacement);
+        inserted = true;
+      }
     }
     pos += length;
   }
@@ -410,7 +465,7 @@ function insertInlineInContent(
   let inserted = false;
 
   for (const node of inline) {
-    const length = (node.text ?? '').length;
+    const length = nodeSize(node);
     const nodeFrom = offset;
     const nodeTo = offset + length;
 

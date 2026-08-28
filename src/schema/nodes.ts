@@ -1,11 +1,12 @@
 import { node, type Node as EditorNode } from '../model/types';
+import { normalizeFontFamily } from './fonts';
 import { DOM_HOLE, type MarkSpec, type NodeSpec, type ParseContext } from './Schema';
 
 /**
  * Built-in node specs.
  *
  * Supported nodes: doc, paragraph, heading, bulletList, orderedList, listItem,
- * text.
+ * hardBreak, text.
  */
 export const builtinNodes: NodeSpec[] = [
   {
@@ -61,6 +62,12 @@ export const builtinNodes: NodeSpec[] = [
     parse: (element, context) => node('listItem', context.parseInline(element)),
   },
   {
+    name: 'hardBreak',
+    group: 'inline',
+    getAttrs: (element) => (element.tagName.toLowerCase() === 'br' ? {} : false),
+    toDOM: () => 'br',
+  },
+  {
     name: 'text',
     group: 'text',
   },
@@ -113,6 +120,18 @@ export const builtinMarks: MarkSpec[] = [
     toDOM: (mark) => {
       const href = typeof mark.attrs?.href === 'string' ? mark.attrs.href : '';
       return ['a', { href }, DOM_HOLE];
+    },
+  },
+  {
+    name: 'fontFamily',
+    parseDOM: [{ tag: 'span', style: 'font-family' }],
+    getAttrs: (element) => {
+      const fontFamily = (element as HTMLElement).style.fontFamily;
+      return fontFamily ? { fontFamily: normalizeFontFamily(fontFamily) } : false;
+    },
+    toDOM: (mark) => {
+      const fontFamily = typeof mark.attrs?.fontFamily === 'string' ? mark.attrs.fontFamily : '';
+      return ['span', { style: `font-family: ${fontFamily}` }, DOM_HOLE];
     },
   },
 ];

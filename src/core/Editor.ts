@@ -6,9 +6,12 @@ import {
   docSize,
   marksAt,
   marksEqual,
+  posOfTextOffset,
   rangeHasMark,
   rangeHasMarkType,
+  textOffsetOf,
 } from '../model/position';
+import { addMarks, insertInline, splitBlockAt } from '../model/transforms';
 import { Schema, builtinMarks, builtinNodes } from '../schema';
 import { DOMRenderer } from '../dom/DOMRenderer';
 import { HTMLParser } from '../serialization/HTMLParser';
@@ -90,6 +93,8 @@ export class Editor {
   private readonly events = new EventEmitter<EditorEvents>();
 
   private doc: EditorNode;
+  private storedMarks: Mark[] = [];
+  private enterHandled = false;
   private composing = false;
   private destroyed = false;
   private lastInputTime = 0;
@@ -119,6 +124,28 @@ export class Editor {
 
   private readonly handleSelectionChange = (): void => {
     this.events.emit('selectionUpdate', { editor: this, selection: this.getSelection() });
+  };
+
+  private readonly handleKeydown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.isComposing) return;
+    if (event.key !== 'Enter' || event.ctrlKey || event.metaKey || event.altKey) return;
+    event.preventDefault();
+    this.enterHandled = true;
+    setTimeout(() => {
+      this.enterHandled = false;
+    }, 0);
+    if (event.shiftKey) this.insertHardBreak();
+    else this.splitBlock();
+  };
+
+  private readonly handleBeforeInput = (event: InputEvent): void => {
+    if (event.defaultPrevented) return;
+    const type = event.inputType;
+    if (type !== 'insertParagraph' && type !== 'insertLineBreak') return;
+    event.preventDefault();
+    if (this.enterHandled) return;
+    if (type === 'insertLineBreak') this.insertHardBreak();
+    else this.splitBlock();
   };
 
   private readonly handlePaste = (event: ClipboardEvent): void => {
@@ -156,6 +183,8 @@ export class Editor {
       getSelection: () => this.readSelection(),
       apply: (document, from, to) => this.apply(document, from, to),
       setSelection: (from, to) => this.setSelection(from, to),
+      getStoredMarks: () => this.storedMarks,
+      setStoredMarks: (marks) => this.setStoredMarks(marks),
       undo: () => this.undo(),
       redo: () => this.redo(),
       canUndo: () => this.history.canUndo,
@@ -191,8 +220,10 @@ export class Editor {
     this.renderer.render(this.element, this.doc);
 
     this.element.addEventListener('input', this.handleInput);
+    this.element.addEventListener('beforeinput', this.handleBeforeInput);
     this.element.addEventListener('compositionstart', this.handleCompositionStart);
     this.element.addEventListener('compositionend', this.handleCompositionEnd);
+    this.element.addEventListener('keydown', this.handleKeydown);
     this.element.addEventListener('focus', this.handleFocus);
     this.element.addEventListener('blur', this.handleBlur);
     this.element.addEventListener('paste', this.handlePaste);
@@ -258,8 +289,10 @@ export class Editor {
     this.destroyed = true;
 
     this.element.removeEventListener('input', this.handleInput);
+    this.element.removeEventListener('beforeinput', this.handleBeforeInput);
     this.element.removeEventListener('compositionstart', this.handleCompositionStart);
     this.element.removeEventListener('compositionend', this.handleCompositionEnd);
+    this.element.removeEventListener('keydown', this.handleKeydown);
     this.element.removeEventListener('focus', this.handleFocus);
     this.element.removeEventListener('blur', this.handleBlur);
     this.element.removeEventListener('paste', this.handlePaste);
@@ -324,8 +357,17 @@ export class Editor {
   getActiveMarks(): Mark[] {
     const sel = this.readSelection();
     if (!sel) return [];
-    if (sel.from === sel.to) return marksAt(this.doc, sel.from);
+    if (sel.from === sel.to) {
+      if (this.storedMarks.length > 0) return this.storedMarks;
+      return marksAt(this.doc, sel.from);
+    }
     return commonMarks(this.doc, sel.from, sel.to);
+  }
+
+  private setStoredMarks(marks: Mark[]): void {
+    if (marksEqualList(this.storedMarks, marks)) return;
+    this.storedMarks = marks;
+    this.events.emit('selectionUpdate', { editor: this, selection: this.getSelection() });
   }
 
   private isMarkActive(
@@ -334,9 +376,8 @@ export class Editor {
     sel: SelectionRange,
   ): boolean {
     if (sel.from === sel.to) {
-      return marksAt(this.doc, sel.from).some((m) =>
-        attrs ? marksEqual(m, { type, attrs }) : m.type === type,
-      );
+      const marks = this.storedMarks.length > 0 ? this.storedMarks : marksAt(this.doc, sel.from);
+      return marks.some((m) => (attrs ? marksEqual(m, { type, attrs }) : m.type === type));
     }
     if (attrs) return rangeHasMark(this.doc, sel.from, sel.to, { type, attrs });
     return rangeHasMarkType(this.doc, sel.from, sel.to, type);
@@ -442,7 +483,42 @@ export class Editor {
     this.lastInputTime = now;
 
     const selection = this.readSelectionRange(nextDoc);
-    this.dispatch(nextDoc, selection, { render: false, group: this.inputGroup });
+
+    let doc = nextDoc;
+    const render =
+      this.storedMarks.length > 0 && selection !== null && selection.from === selection.to;
+    if (render) {
+      doc = this.applyStoredMarksToInsertion(this.doc, nextDoc, selection.from);
+    }
+
+    this.dispatch(doc, selection, { render, group: this.inputGroup });
+  }
+
+  private applyStoredMarksToInsertion(
+    before: EditorNode,
+    after: EditorNode,
+    caret: number,
+  ): EditorNode {
+    const inserted = textOffsetOf(after, docSize(after)) - textOffsetOf(before, docSize(before));
+    if (inserted <= 0) return after;
+    const start = posOfTextOffset(after, Math.max(0, textOffsetOf(after, caret) - inserted));
+    return addMarks(after, start, caret, this.storedMarks);
+  }
+
+  private splitBlock(): void {
+    const sel = this.readSelection();
+    if (!sel) return;
+    const result = splitBlockAt(this.doc, sel.from);
+    if (!result) return;
+    this.dispatch(result.doc, { from: result.pos, to: result.pos }, { render: true, group: null });
+  }
+
+  private insertHardBreak(): void {
+    const sel = this.readSelection();
+    if (!sel) return;
+    const doc = insertInline(this.doc, sel.from, sel.to, [{ type: 'hardBreak' }]);
+    if (doc === this.doc) return;
+    this.dispatch(doc, { from: sel.from + 1, to: sel.from + 1 }, { render: true, group: null });
   }
 
   private restoreSelection(from: number, to: number): void {
@@ -465,6 +541,11 @@ export class Editor {
 
 function createEmptyDoc(): EditorNode {
   return node('doc', [node('paragraph', [])]);
+}
+
+function marksEqualList(a: Mark[], b: Mark[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((mark) => b.some((other) => marksEqual(mark, other)));
 }
 
 /**

@@ -187,6 +187,26 @@
       .toolbar .text-btn {
         font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
       }
+      .toolbar .font-select {
+        min-width: 9.5rem;
+        height: 2.1rem;
+        padding: 0 0.5rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: var(--surface);
+        color: var(--fg);
+        font: inherit;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .toolbar .font-select:hover {
+        border-color: var(--border-strong);
+      }
+      .toolbar .font-select:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--ring);
+      }
 
       #editor {
         min-height: 340px;
@@ -205,6 +225,9 @@
       }
       #editor p {
         margin: 0 0 0.85rem;
+      }
+      #editor p:empty::before {
+        content: '\200b';
       }
       #editor h1,
       #editor h2,
@@ -494,6 +517,15 @@
             <button type="button" data-mark="strike" title="Strikethrough">
               <svg class="ic"><use href="#i-strike" /></svg>
             </button>
+          </div>
+          <span class="divider"></span>
+          <div class="group">
+            <select
+              id="font-family"
+              class="font-select"
+              title="Font family"
+              aria-label="Font family"
+            ></select>
           </div>
           <span class="divider"></span>
           <div class="group">

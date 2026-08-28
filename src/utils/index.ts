@@ -7,9 +7,13 @@ export function escapeHTML(value: string): string {
 
 /**
  * Escapes a string for safe insertion into an HTML attribute value.
+ *
+ * Single quotes are left as-is: attribute values are emitted inside double
+ * quotes, so single quotes need no escaping (this keeps e.g. font stacks
+ * readable).
  */
 export function escapeAttribute(value: string): string {
-  return escapeHTML(value).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return escapeHTML(value).replace(/"/g, '&quot;');
 }
 
 /**

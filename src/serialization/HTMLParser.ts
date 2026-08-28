@@ -134,6 +134,19 @@ export class HTMLParser {
         }
         const mark: Mark = { type: markSpec.name };
         nodes.push(...this.collectInline(element, [...marks, mark]));
+        return;
+      }
+
+      const inlineSpec = this.schema.inlineNodeForElement(element);
+      if (inlineSpec) {
+        const attrs = inlineSpec.getAttrs ? inlineSpec.getAttrs(element) : undefined;
+        if (attrs === false) {
+          nodes.push(...this.collectInline(element, marks));
+          return;
+        }
+        const leaf: EditorNode = { type: inlineSpec.name };
+        if (attrs && Object.keys(attrs).length > 0) leaf.attrs = attrs;
+        nodes.push(leaf);
       } else {
         // Unknown inline element: unwrap and keep parsing its children.
         nodes.push(...this.collectInline(element, marks));

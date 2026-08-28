@@ -1,4 +1,10 @@
-import { createEditor, toggleMark, type Extension } from '../src/index';
+import {
+  createEditor,
+  toggleMark,
+  FONT_FAMILIES,
+  type Extension,
+  type FontFamilyCategory,
+} from '../src/index';
 
 const editorElement = document.querySelector<HTMLElement>('#editor')!;
 
@@ -27,6 +33,31 @@ const outputJSON = document.querySelector<HTMLElement>('#output-json')!;
 const outputText = document.querySelector<HTMLElement>('#output-text')!;
 const selectionStatus = document.querySelector<HTMLElement>('#selection-status')!;
 const wordCount = document.querySelector<HTMLElement>('#word-count')!;
+const fontSelect = document.querySelector<HTMLSelectElement>('#font-family')!;
+
+const FONT_CATEGORY_LABELS: Record<FontFamilyCategory, string> = {
+  'sans-serif': 'Sans-serif',
+  serif: 'Serif',
+  monospace: 'Monospace',
+  cursive: 'Display',
+};
+
+const defaultOption = document.createElement('option');
+defaultOption.value = '';
+defaultOption.textContent = 'Default';
+fontSelect.appendChild(defaultOption);
+
+for (const category of Object.keys(FONT_CATEGORY_LABELS) as FontFamilyCategory[]) {
+  const group = document.createElement('optgroup');
+  group.label = FONT_CATEGORY_LABELS[category];
+  for (const font of FONT_FAMILIES.filter((f) => f.category === category)) {
+    const option = document.createElement('option');
+    option.value = font.value;
+    option.textContent = font.label;
+    group.appendChild(option);
+  }
+  fontSelect.appendChild(group);
+}
 
 function updateOutputs(): void {
   outputHTML.textContent = editor.getHTML();
@@ -67,6 +98,10 @@ function updateToolbarState(): void {
   document
     .querySelector<HTMLElement>('#highlight')!
     .classList.toggle('is-active', editor.isActive('highlight'));
+
+  const activeFont = editor.getActiveMarks().find((mark) => mark.type === 'fontFamily')
+    ?.attrs?.fontFamily;
+  fontSelect.value = typeof activeFont === 'string' ? activeFont : '';
 }
 
 editor.on('update', updateOutputs);
@@ -105,6 +140,24 @@ document.querySelectorAll<HTMLElement>('[data-list]').forEach((button) => {
 
 document.querySelector<HTMLElement>('#highlight')!.addEventListener('click', () => {
   (editor.commands['toggleHighlight'] as () => boolean)();
+});
+
+let pendingSelection: { from: number; to: number } | null = null;
+
+fontSelect.addEventListener('mousedown', () => {
+  const selection = editor.getSelection();
+  pendingSelection = selection ? { from: selection.from, to: selection.to } : null;
+});
+
+fontSelect.addEventListener('change', () => {
+  if (pendingSelection) {
+    editor.setSelection(pendingSelection.from, pendingSelection.to);
+    pendingSelection = null;
+  }
+  const value = fontSelect.value;
+  if (!value) editor.commands.unsetFontFamily();
+  else editor.commands.fontFamily(value);
+  editor.focus();
 });
 
 document.querySelector<HTMLElement>('#link')!.addEventListener('click', () => {

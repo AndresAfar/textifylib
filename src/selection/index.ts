@@ -115,7 +115,13 @@ function walkInline(
       const tag = element.tagName.toLowerCase();
       if (isDangerousTag(tag)) continue;
       if (tag === 'br') {
-        index.set(element, { from: state.pos, to: state.pos });
+        const model = inline[state.mi];
+        const isLeaf = model != null && model.text == null;
+        index.set(element, { from: state.pos, to: state.pos + (isLeaf ? 1 : 0) });
+        if (isLeaf) {
+          state.pos += 1;
+          state.mi += 1;
+        }
         continue;
       }
       const start = state.pos;
@@ -225,7 +231,9 @@ function inlineToDomPoint(
   const state = { mi: 0, pos: 0 };
 
   const walk = (container: Element): { node: globalThis.Node; offset: number } | null => {
-    for (const child of Array.from(container.childNodes)) {
+    const children = Array.from(container.childNodes);
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i] as globalThis.Node;
       if (child.nodeType === TEXT_NODE) {
         const model = inline[state.mi];
         const length = model && model.text != null ? model.text.length : 0;
@@ -235,7 +243,20 @@ function inlineToDomPoint(
         state.pos += length;
         state.mi += 1;
       } else if (child.nodeType === ELEMENT_NODE) {
-        const found = walk(child as Element);
+        const element = child as Element;
+        const model = inline[state.mi];
+        const isLeaf =
+          element.tagName.toLowerCase() === 'br' && model != null && model.text == null;
+        if (isLeaf) {
+          if (contentOffset >= state.pos && contentOffset <= state.pos + 1) {
+            const after = contentOffset === state.pos + 1;
+            return { node: container, offset: i + (after ? 1 : 0) };
+          }
+          state.pos += 1;
+          state.mi += 1;
+          continue;
+        }
+        const found = walk(element);
         if (found) return found;
       }
     }

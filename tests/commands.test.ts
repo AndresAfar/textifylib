@@ -63,6 +63,20 @@ function setCaret(editor: Editor, offset: number): void {
   selectFlat(editor, offset, offset);
 }
 
+/** Simulate typing at the current caret, then fire the `input` event. */
+function typeText(editor: Editor, text: string): void {
+  const sel = window.getSelection()!;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  const textNode = document.createTextNode(text);
+  range.insertNode(textNode);
+  range.setStartAfter(textNode);
+  range.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  editor.element.dispatchEvent(new Event('input'));
+}
+
 afterEach(() => {
   for (const editor of editors) editor.destroy();
   editors = [];
@@ -94,11 +108,42 @@ describe('mark commands', () => {
     expect(editor.getHTML()).toBe('<p><em><u><s>text</s></u></em></p>');
   });
 
-  it('is a no-op for a collapsed selection', () => {
+  it('stores a mark at a collapsed selection instead of applying it', () => {
     const editor = makeEditor('<p>Hello</p>');
     setCaret(editor, 1);
-    expect(editor.commands.bold()).toBe(false);
+    expect(editor.commands.bold()).toBe(true);
     expect(editor.getHTML()).toBe('<p>Hello</p>');
+    expect(editor.isActive('bold')).toBe(true);
+  });
+});
+
+describe('stored marks', () => {
+  it('applies a stored mark to subsequently typed text', () => {
+    const editor = makeEditor('<p>Hello</p>');
+    setCaret(editor, 5);
+    expect(editor.commands.bold()).toBe(true);
+    typeText(editor, '!');
+    expect(editor.getHTML()).toBe('<p>Hello<strong>!</strong></p>');
+  });
+
+  it('toggles a stored mark off again', () => {
+    const editor = makeEditor('<p>Hello</p>');
+    setCaret(editor, 5);
+    expect(editor.commands.bold()).toBe(true);
+    expect(editor.commands.bold()).toBe(true);
+    expect(editor.isActive('bold')).toBe(false);
+    typeText(editor, '!');
+    expect(editor.getHTML()).toBe('<p>Hello!</p>');
+  });
+
+  it('applies a stored font family to subsequently typed text', () => {
+    const editor = makeEditor('<p>Hello</p>');
+    setCaret(editor, 5);
+    expect(editor.commands.fontFamily("'Ubuntu Mono', monospace")).toBe(true);
+    typeText(editor, '!');
+    expect(editor.getHTML()).toBe(
+      `<p>Hello<span style="font-family: 'Ubuntu Mono', monospace">!</span></p>`,
+    );
   });
 });
 
@@ -200,7 +245,7 @@ describe('can()', () => {
   it('reflects whether a mark command can run', () => {
     const editor = makeEditor('<p>Hello</p>');
     setCaret(editor, 1);
-    expect(editor.can().bold()).toBe(false);
+    expect(editor.can().bold()).toBe(true);
 
     selectFlat(editor, 0, 3);
     expect(editor.can().bold()).toBe(true);

@@ -18,6 +18,8 @@ export {
 
 export { Schema, getDefaultSchema, createSchema, DOM_HOLE } from './schema';
 export type { NodeSpec, MarkSpec, DOMOutputSpec, NodeGroup, ParseContext } from './schema';
+export { FONT_FAMILIES } from './schema/fonts';
+export type { FontFamilyOption, FontFamilyCategory } from './schema/fonts';
 
 export { ExtensionManager } from './extensions/ExtensionManager';
 export type { Extension, Command, EditorEventHandlers } from './extensions/Extension';

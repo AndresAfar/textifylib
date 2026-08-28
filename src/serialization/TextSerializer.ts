@@ -19,5 +19,6 @@ function blockText(node: EditorNode): string {
 
 function nodeText(node: EditorNode): string {
   if (node.text != null) return node.text;
+  if (node.type === 'hardBreak') return '\n';
   return (node.content ?? []).map(nodeText).join('');
 }
